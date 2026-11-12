@@ -132,66 +132,26 @@ python3 $S sync --prune                  # 删除云效中已不存在的本地�
 
 **为什么不用全局安装 / 插件市场**：放在项目 `.claude/skills/` 下，任何人 clone 仓库后 Claude Code 自动发现该 skill，版本随仓库走，团队所有人用的是同一份脚本，不存在各自装版本不一致的问题。脚本仅用 Python 标准库（`urllib`/`json`/`argparse` 等），无需 `pip install`。
 
-## 加载到一个已存在的项目（管理员，一次性）
+## 安装到项目（给人看的简述，给 agent 看 INSTALL.md）
 
-适用于把这套机制接入一个还没有该 skill 的现有仓库：
+**让智能体安装**：对它说「帮我安装 https://github.com/nixecn-lab/codeup-workitem」，它会读取仓库根目录的 **`INSTALL.md`** 并按步执行——拷贝技能到 `.claude/skills/codeup-workitem/`、在项目 `CLAUDE.md` 写入带标记的编号管理规则块、配置 `.gitignore` 凭证保护，然后引导你完成 PAT 与交互式 `setup`。完整、唯一的安装事实源是 `INSTALL.md`，本节只做概述：
 
-1. **拷贝 skill 目录**：把 `codeup-workitem/` 整个目录复制到目标仓库的 `.claude/skills/` 下（保持目录结构不变）。
-2. **准备 Python 3**：确认 `python3 --version` 可用（macOS/Linux 自带，无第三方依赖）。
-3. **配置云效 PAT 环境变量**（见下方「团队成员安装」第 2~3 步，管理员自己也要配一个）。
-4. **初始化项目配置**：在仓库根目录运行交互式 setup，填入/选择 organizationId、projectId、各工作项类型 id、默认指派人：
-   ```bash
-   python3 .claude/skills/codeup-workitem/scripts/yx_workitem.py setup
-   ```
-   生成的 `.yunxiao.json` 只含组织/项目 id 与类型 id，**不含 token，可安全提交**。
-5. **接入项目规范**：在目标仓库的 `CLAUDE.md` 追加「任务编号管理」强制规则（参考本仓库 CLAUDE.md），让 Claude 在起号时强制走本 skill。
-6. **确认 `.gitignore`**：保证不会把本地凭证提交进去（token 只走环境变量，本就不入库）：
-   ```gitignore
-   .yunxiao_env
-   *.local
-   __pycache__/
-   ```
-7. **提交并推送**：
-   ```bash
-   git add .claude/skills/codeup-workitem .yunxiao.json CLAUDE.md .gitignore
-   git commit -m "chore: 接入 codeup-workitem 云效统一编号 skill"
-   ```
+1. 把本仓库内容放到目标项目 `.claude/skills/codeup-workitem/`（不含 `.git`）。
+2. `.gitignore` 忽略 `.yunxiao.json`、`.yunxiao_env`、`*.local`、`__pycache__/`。
+3. `CLAUDE.md` 追加「任务编号管理（强制）」规则块（INSTALL.md 附完整可粘贴文本，用 BEGIN/END 标记包裹）。
+4. 用户本人创建云效 PAT（权限点：项目协作-工作项读写 + 项目成员只读），`export YUNXIAO_TOKEN=...` 写入自己的 shell 配置。
+5. 用户在终端运行交互式 `python3 .claude/skills/codeup-workitem/scripts/yx_workitem.py setup` 生成 `.yunxiao.json`。
+6. `list --category=task` 只读验证连通；可选 `sync` 拉取存量工作项描述。
 
-> 若要接入另一个云效项目，只需在该仓库重新跑一次 `setup` 生成对应 `.yunxiao.json`；脚本本身可跨项目复用。
-
-## 团队成员安装（每个人，clone 之后）
-
-1. **clone 仓库**：skill 位于 `.claude/skills/`，Claude Code 在该项目下自动加载，无需手动安装。
-2. **创建云效个人访问令牌（PAT）**：
-   - 云效控制台 → 个人设置 → 个人访问令牌 → 创建
-   - 权限点勾选 **项目协作-工作项读写** + **项目协作-项目成员只读**（setup 选默认指派人需要成员只读权限）
-   - 官方文档：https://help.aliyun.com/zh/yunxiao/user-guide/personal-access-token
-3. **设置环境变量**（写入各自 `~/.zshrc` / `~/.bashrc`，**绝不提交到仓库**）：
-   ```bash
-   export YUNXIAO_TOKEN=pt-xxxxxxxx
-   ```
-   改完在新终端生效，或当前终端 `source ~/.zshrc`。
-4. **验证连通性**：
-   ```bash
-   python3 .claude/skills/codeup-workitem/scripts/yx_workitem.py setup
-   ```
-   能正常拉取项目/类型信息即配置成功（`.yunxiao.json` 已由管理员提交，普通成员无需重新初始化，setup 仅作连通性验证）。
-5. （可选）首次使用时跑一次 `sync` 把云效存量工作项的描述文档拉到本地 `docs/workitems/`：
-   ```bash
-   python3 .claude/skills/codeup-workitem/scripts/yx_workitem.py sync
-   ```
+**升级 / 卸载**：见 INSTALL.md 的「重复安装 / 升级」「卸载」章节。升级只覆盖技能文件，绝不碰宿主项目的 `.yunxiao.json` 与 `docs/`；卸载默认保留这两类用户数据。
 
 ## 凭证与安全边界
 
-- **PAT 只存在于每个人的环境变量 `YUNXIAO_TOKEN`**，不写入任何入库文件；`.yunxiao.json` 只有组织/项目 id，可公开提交。
+- **PAT 只存在于每个人的环境变量 `YUNXIAO_TOKEN`**，不写入任何入库文件，agent 也不代改用户 shell 配置。
 - 脚本读取顺序：环境变量 `YUNXIAO_TOKEN` / `YUNXIAO_ORGANIZATION_ID` 优先，其次仓库内 `.yunxiao.json`。
+- `.yunxiao.json` 不含 token，只有组织/项目 id 与类型 id；默认按 INSTALL.md 加入 `.gitignore` 不入库（私有团队仓库若想共享配置也可 `git add -f` 强制提交，无密钥泄露风险，但会暴露内部项目 id）。
 - 每个成员用**自己的 PAT**，云效侧操作记录各自可追溯；吊销某人的 PAT 不影响其他人。
 - `docs/workitems/` 是正常入库的业务文档，不是凭证，可以放心提交。
-
-## 升级与卸载
-
-- **升级脚本**：在 skill 源仓库改完 `yx_workitem.py` / `SKILL.md`，把 `codeup-workitem/` 同步到各项目并提交即可；各项目的 `.yunxiao.json` 与 `docs/` 不受影响。
-- **卸载**：删除 `.claude/skills/codeup-workitem/` 并移除 CLAUDE.md 对应规则；`.yunxiao.json` 和 `docs/workitems/` 可按需保留（历史描述文档仍有价值）。云效侧数据不会因本地卸载而丢失。
 
 ## 报错处理
 

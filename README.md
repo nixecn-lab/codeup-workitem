@@ -4,6 +4,14 @@ Claude Code / Codex 项目级 skill：统一通过[云效 Projex](https://www.al
 
 纯 Python 标准库实现，无需 `pip install`；随仓库 `.claude/skills/` 分发，clone 即用。
 
+## 安装到项目
+
+直接对 AI 智能体说：
+
+> 帮我安装 https://github.com/nixecn-lab/codeup-workitem
+
+智能体会阅读仓库里的 **[INSTALL.md](./INSTALL.md)**（面向 agent 的安装指南），自动完成：拷贝技能到 `.claude/skills/codeup-workitem/`、在项目 `CLAUDE.md` 写入编号管理强制规则、配置 `.gitignore` 凭证保护，并引导你完成 PAT 配置和交互式 `setup`。手动安装的完整步骤同样见 INSTALL.md。
+
 ## 能力
 
 - `create` 在云效创建任务/缺陷/需求，取回服务端分配的 `serialNumber`
@@ -33,12 +41,13 @@ python3 .claude/skills/codeup-workitem/scripts/yx_workitem.py \
 ## 仓库布局
 
 ```
-SKILL.md                 # skill 定义：触发规则、命令用法、安装/分发/安全说明
+SKILL.md                 # skill 定义：触发规则、命令用法、双存储、安全说明
+INSTALL.md               # 面向 AI agent 的逐步安装指南（安装入口）
 scripts/yx_workitem.py   # 纯标准库实现（Python 3）
 yunxiao.example.json     # 项目配置模板（真实 .yunxiao.json 由 setup 生成，不入库）
 ```
 
-接入项目时把本仓库内容放到目标仓库的 `.claude/skills/codeup-workitem/` 下即可。
+接入项目时把本仓库内容放到目标仓库的 `.claude/skills/codeup-workitem/` 下，具体步骤见 [INSTALL.md](./INSTALL.md)。
 
 ## 凭证安全
 
