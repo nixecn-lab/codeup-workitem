@@ -1,0 +1,15 @@
+{
+  "_comment": "项目配置模板。复制为仓库根目录 .yunxiao.json 并填入真实值，或直接运行 setup 自动生成。本文件不含任何凭证，可公开提交；真实 PAT 只放环境变量 YUNXIAO_TOKEN。",
+  "organizationId": "<云效组织 id，如 65xxxxxxxxxxxxxxxx>",
+  "projectId": "<云效 Projex 项目 id>",
+  "defaultAssignee": "<默认指派人 userId，可选；setup 可从项目成员中选择>",
+  "docsDir": "docs/workitems",
+  "workitemTypes": {
+    "req": "<需求工作项类型 id>",
+    "task": "<任务工作项类型 id>",
+    "bug": "<缺陷工作项类型 id>"
+  },
+  "fieldDefaults": {
+    "bug": {}
+  }
+}
